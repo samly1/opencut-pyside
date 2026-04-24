@@ -51,3 +51,10 @@ bin/ffmpeg.exe
 bin/ffprobe
 bin/ffprobe.exe
 exports/
+
+# Generated translation binaries — rebuilt by scripts/update_translations.sh
+i18n/*.qm
+
+# PyInstaller build artefacts
+packaging/build/
+packaging/dist/
