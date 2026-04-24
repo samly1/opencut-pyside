@@ -4,12 +4,16 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.domain.media_asset import MediaAsset
+from app.infrastructure.ffprobe_gateway import FFprobeGateway
 
 
 class MediaService:
     _VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"}
     _AUDIO_EXTENSIONS = {".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"}
     _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"}
+
+    def __init__(self, ffprobe_gateway: FFprobeGateway | None = None) -> None:
+        self._ffprobe_gateway = ffprobe_gateway or FFprobeGateway()
 
     def import_files(self, file_paths: list[str]) -> list[MediaAsset]:
         imported_assets: list[MediaAsset] = []
@@ -38,14 +42,21 @@ class MediaService:
         file_size_bytes = resolved_path.stat().st_size
         media_id = f"media_{uuid4().hex[:10]}"
 
+        duration_seconds = self._probe_duration(str(resolved_path), media_type)
+
         return MediaAsset(
             media_id=media_id,
             name=resolved_path.stem,
             file_path=str(resolved_path),
             media_type=media_type,
-            duration_seconds=None,
+            duration_seconds=duration_seconds,
             file_size_bytes=file_size_bytes,
         )
+
+    def _probe_duration(self, file_path: str, media_type: str) -> float | None:
+        if media_type == "image":
+            return None
+        return self._ffprobe_gateway.probe_duration(file_path)
 
     def _infer_media_type(self, extension: str) -> str:
         if extension in self._VIDEO_EXTENSIONS:
