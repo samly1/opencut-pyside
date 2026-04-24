@@ -7,11 +7,12 @@ on:
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -20,7 +21,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install system deps (xcb + audio runtime libs for offscreen Qt)
+      - name: Install Linux system deps (xcb + audio runtime libs for offscreen Qt)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
