@@ -1444,6 +1444,17 @@ class AdvancedTimelineWidget(QWidget):
                     self.zoom_changed.emit(self.zoom)
         else: 
             event.ignore()
+            # Khi hover-scrub đang bật, cuộn ngang (Alt+scroll) thay đổi viewport
+            # nhưng mouseMoveEvent không được gọi vì chuột không di chuyển vật lý.
+            # Cần cập nhật playhead sau khi scroll xử lý xong.
+            if getattr(self, 'hover_scrub_enabled', False):
+                QTimer.singleShot(0, self._sync_playhead_to_cursor)
+
+    def _sync_playhead_to_cursor(self):
+        """Cập nhật playhead theo vị trí chuột hiện tại (dùng sau khi scroll thay đổi viewport)."""
+        cursor_pos = self.mapFromGlobal(QCursor.pos())
+        if self.rect().contains(cursor_pos):
+            self.handle_scrub(cursor_pos)
 
     def handle_scrub(self, pos):
         """Xử lý kéo thanh playhead, giới hạn trong vùng nhìn thấy"""
