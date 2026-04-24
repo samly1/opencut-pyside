@@ -38,6 +38,21 @@ def test_unsupported_language_falls_back_to_default(monkeypatch):
     assert tm.resolve_language("klingon") == "vi"
 
 
+def test_supported_system_locale_is_used(monkeypatch):
+    monkeypatch.delenv("OPENCUT_LANG", raising=False)
+    monkeypatch.setattr(tm, "QLocale", _FakeQLocale("en_US"), raising=True)
+    assert tm.resolve_language() == "en"
+
+
+def test_unsupported_system_locale_falls_through_to_default(monkeypatch):
+    # Regression test: the system-locale branch must NOT pass the value
+    # through _normalise (which would collapse unsupported locales onto the
+    # default and make the membership guard a no-op).
+    monkeypatch.delenv("OPENCUT_LANG", raising=False)
+    monkeypatch.setattr(tm, "QLocale", _FakeQLocale("de_DE"), raising=True)
+    assert tm.resolve_language() == "vi"
+
+
 def test_install_translators_is_noop_when_no_qm(tmp_path, qapp, monkeypatch):
     monkeypatch.delenv("OPENCUT_LANG", raising=False)
     # Empty directory -> nothing to install, function must not raise.

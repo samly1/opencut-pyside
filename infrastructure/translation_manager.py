@@ -52,7 +52,13 @@ def resolve_language(explicit: str | None = None) -> str:
     env = os.environ.get("OPENCUT_LANG")
     if env:
         return _normalise(env)
-    system = _normalise(QLocale.system().name().split("_", 1)[0])
+    # For the system locale we must NOT run through ``_normalise`` (which
+    # itself falls back to DEFAULT_LANGUAGE for anything unsupported) —
+    # otherwise the membership guard would always succeed and the final
+    # ``return DEFAULT_LANGUAGE`` below would be dead code. Instead we only
+    # reshape the string and check membership directly, so unknown system
+    # locales fall through to step 4.
+    system = QLocale.system().name().split("_", 1)[0].strip().lower()
     if system in SUPPORTED_LANGUAGES:
         return system
     return DEFAULT_LANGUAGE
