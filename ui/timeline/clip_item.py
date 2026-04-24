@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF
-from PySide6.QtGui import QColor, QBrush, QPen
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsSimpleTextItem
-
 from app.domain.clips.base_clip import BaseClip
+from PySide6.QtCore import QRectF, Qt
+from PySide6.QtGui import QBrush, QColor, QPen
+from PySide6.QtWidgets import QGraphicsRectItem, QGraphicsSimpleTextItem
 
 
 class ClipItem(QGraphicsRectItem):

@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal
-
 from app.domain.project import Project, build_demo_project
 from app.services.media_service import MediaService
 from app.services.project_service import ProjectService
+from PySide6.QtCore import QObject, Signal
 
 
 class ProjectController(QObject):

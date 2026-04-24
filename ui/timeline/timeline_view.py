@@ -1,15 +1,24 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QCursor, QDragEnterEvent, QDragMoveEvent, QDropEvent, QKeyEvent, QMouseEvent, QPainter, QResizeEvent, QWheelEvent
-from PySide6.QtWidgets import QFrame, QGraphicsItem, QGraphicsView, QWidget
-
 from app.controllers.playback_controller import PlaybackController
 from app.controllers.selection_controller import SelectionController
 from app.controllers.timeline_controller import TimelineController
 from app.ui.media_panel.media_item_widget import media_id_from_mime_data
 from app.ui.timeline.clip_item import ClipItem
 from app.ui.timeline.timeline_scene import TimelineScene
+from PySide6.QtCore import Qt
+from PySide6.QtGui import (
+    QCursor,
+    QDragEnterEvent,
+    QDragMoveEvent,
+    QDropEvent,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QResizeEvent,
+    QWheelEvent,
+)
+from PySide6.QtWidgets import QFrame, QGraphicsItem, QGraphicsView, QWidget
 
 
 class TimelineView(QGraphicsView):
@@ -67,6 +76,7 @@ class TimelineView(QGraphicsView):
         self._drag_clip_start_time = 0.0
         self._drag_clip_start_duration = 0.0
         self._is_dragging = False
+        self._is_scrubbing = False
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         media_id = media_id_from_mime_data(event.mimeData())
@@ -149,7 +159,7 @@ class TimelineView(QGraphicsView):
     def _refresh_from_controller(self) -> None:
         viewport_width = self.viewport().width()
         viewport_height = self.viewport().height()
-        
+
         self._timeline_scene.pixels_per_second = self._timeline_controller.pixels_per_second
         self._timeline_scene.set_project(
             self._timeline_controller.active_project(),
@@ -175,13 +185,13 @@ class TimelineView(QGraphicsView):
     def _ensure_playhead_visible(self, time_seconds: float) -> None:
         pps = self._timeline_controller.pixels_per_second
         playhead_x = self._timeline_scene.left_gutter + time_seconds * pps
-        
+
         viewport_rect = self.viewport().rect()
         visible_scene_rect = self.mapToScene(viewport_rect).boundingRect()
-        
+
         margin_px = 40.0
         is_playing = self._playback_controller.is_playing()
-        
+
         if is_playing:
             # When playing, scroll if playhead reaches the right edge
             if playhead_x > visible_scene_rect.right() - margin_px:
@@ -200,6 +210,14 @@ class TimelineView(QGraphicsView):
             super().mousePressEvent(event)
             return
         self.setFocus(Qt.FocusReason.MouseFocusReason)
+
+        scene_pos = self.mapToScene(event.position().toPoint())
+        if self._is_ruler_scene_y(scene_pos.y()):
+            self._seek_to_scene_x(scene_pos.x())
+            self._is_scrubbing = True
+            self.setCursor(Qt.CursorShape.SizeHorCursor)
+            event.accept()
+            return
 
         scene_item = self.itemAt(event.position().toPoint())
         clip_item = self._clip_item_from_item(scene_item)
@@ -239,6 +257,12 @@ class TimelineView(QGraphicsView):
         event.accept()
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if self._is_scrubbing:
+            scene_pos = self.mapToScene(event.position().toPoint())
+            self._seek_to_scene_x(scene_pos.x())
+            event.accept()
+            return
+
         if not self._is_dragging or self._drag_clip_id is None:
             self._update_hover_cursor(event)
             super().mouseMoveEvent(event)
@@ -278,7 +302,7 @@ class TimelineView(QGraphicsView):
         # Apply to visual item
         display_x = left_gutter + snapped_start * pps
         display_width = snapped_duration * pps
-        
+
         if self._drag_mode == "move":
             clip_item.setX(display_x)
         else:
@@ -293,6 +317,12 @@ class TimelineView(QGraphicsView):
         event.accept()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton and self._is_scrubbing:
+            self._is_scrubbing = False
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            event.accept()
+            return
+
         if event.button() != Qt.MouseButton.LeftButton or not self._is_dragging or self._drag_clip_id is None:
             super().mouseReleaseEvent(event)
             return
@@ -368,7 +398,50 @@ class TimelineView(QGraphicsView):
             if self._timeline_controller.split_selected_clip(rounded_split_position):
                 event.accept()
                 return
+
+        if event.key() == Qt.Key.Key_Space and event.modifiers() == Qt.KeyboardModifier.NoModifier:
+            if self._playback_controller.is_playing():
+                self._playback_controller.pause()
+            else:
+                self._playback_controller.play()
+            event.accept()
+            return
+
+        if event.key() in (Qt.Key.Key_Left, Qt.Key.Key_Right):
+            step = self._playhead_nudge_step(event.modifiers())
+            if step > 0.0:
+                direction = -1.0 if event.key() == Qt.Key.Key_Left else 1.0
+                new_time = max(0.0, self._playback_controller.current_time() + direction * step)
+                self._playback_controller.seek(new_time)
+                event.accept()
+                return
+
+        if event.key() == Qt.Key.Key_Home and event.modifiers() == Qt.KeyboardModifier.NoModifier:
+            self._playback_controller.seek(0.0)
+            event.accept()
+            return
+
         super().keyPressEvent(event)
+
+    def _playhead_nudge_step(self, modifiers: Qt.KeyboardModifier) -> float:
+        project = self._timeline_controller.active_project()
+        fps = project.fps if project is not None and project.fps > 0 else 30.0
+        frame_duration = 1.0 / fps
+        if modifiers & Qt.KeyboardModifier.ShiftModifier:
+            return max(frame_duration, 1.0)
+        if modifiers == Qt.KeyboardModifier.NoModifier:
+            return frame_duration
+        return 0.0
+
+    def _is_ruler_scene_y(self, scene_y: float) -> bool:
+        return 0.0 <= scene_y <= self._timeline_scene.ruler_height
+
+    def _seek_to_scene_x(self, scene_x: float) -> None:
+        pps = self._timeline_scene.pixels_per_second
+        if pps <= 0:
+            return
+        time_seconds = max(0.0, (scene_x - self._timeline_scene.left_gutter) / pps)
+        self._playback_controller.seek(round(time_seconds, 4))
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:

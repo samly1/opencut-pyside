@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QObject, QTimer, Signal
-
 from app.controllers.export_controller import ExportController
 from app.controllers.inspector_controller import InspectorController
 from app.controllers.playback_controller import PlaybackController
@@ -13,6 +11,7 @@ from app.services.export_service import ExportService
 from app.services.media_service import MediaService
 from app.services.playback_service import PlaybackService
 from app.services.project_service import ProjectService
+from PySide6.QtCore import QObject, QTimer, Signal
 
 
 class AppController(QObject):

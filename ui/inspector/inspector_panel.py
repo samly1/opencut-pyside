@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
-
 from app.controllers.app_controller import AppController
 from app.domain.clips.audio_clip import AudioClip
 from app.domain.clips.image_clip import ImageClip
@@ -12,6 +10,7 @@ from app.ui.inspector.image_inspector import ImageInspector
 from app.ui.inspector.project_inspector import ProjectInspector
 from app.ui.inspector.text_inspector import TextInspector
 from app.ui.inspector.video_inspector import VideoInspector
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 
 class InspectorPanel(QWidget):

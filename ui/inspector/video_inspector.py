@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QDoubleSpinBox
-
 from app.domain.clips.video_clip import VideoClip
 from app.ui.inspector._clip_inspector_base import ClipInspectorBase, block_signals
+from PySide6.QtWidgets import QDoubleSpinBox
 
 
 class VideoInspector(ClipInspectorBase):

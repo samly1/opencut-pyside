@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QElapsedTimer, QObject, QRunnable, QThreadPool, QTimer, Signal
-from PySide6.QtGui import QImage
-
 from app.controllers.project_controller import ProjectController
 from app.services.audio_playback_service import AudioPlaybackService
 from app.services.playback_service import PlaybackService
+from PySide6.QtCore import QElapsedTimer, QObject, QRunnable, QThreadPool, QTimer, Signal
+from PySide6.QtGui import QImage
 
 
 @dataclass(slots=True)

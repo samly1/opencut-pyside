@@ -3,21 +3,27 @@ from __future__ import annotations
 from typing import Literal
 from uuid import uuid4
 
-from PySide6.QtCore import QObject, Signal
-
 from app.controllers.project_controller import ProjectController
 from app.controllers.selection_controller import SelectionController
 from app.domain.clips.audio_clip import AudioClip
 from app.domain.clips.base_clip import BaseClip
 from app.domain.clips.image_clip import ImageClip
 from app.domain.clips.video_clip import VideoClip
-from app.domain.commands import AddClipCommand, CommandManager, DeleteClipCommand, MoveClipCommand, SplitClipCommand, TrimClipCommand
+from app.domain.commands import (
+    AddClipCommand,
+    CommandManager,
+    DeleteClipCommand,
+    MoveClipCommand,
+    SplitClipCommand,
+    TrimClipCommand,
+)
 from app.domain.commands.base_command import BaseCommand
 from app.domain.media_asset import MediaAsset
 from app.domain.project import Project
 from app.domain.snap_engine import SnapEngine
 from app.domain.timeline import Timeline
 from app.domain.track import Track
+from PySide6.QtCore import QObject, Signal
 
 
 class TimelineController(QObject):

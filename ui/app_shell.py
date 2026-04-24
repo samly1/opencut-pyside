@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget
-
 from app.controllers.app_controller import AppController
 from app.ui.inspector.inspector_panel import InspectorPanel
 from app.ui.media_panel.media_panel import MediaPanel
 from app.ui.preview.preview_widget import PreviewWidget
 from app.ui.timeline.timeline_view import TimelineView
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget
 
 
 class AppShell(QWidget):
@@ -34,7 +33,7 @@ class AppShell(QWidget):
         #       [Timeline]
         root_splitter = QSplitter(Qt.Orientation.Vertical, self)
         root_splitter.addWidget(top_splitter)
-        
+
         self.timeline_view = TimelineView(
             self._app_controller.timeline_controller,
             self._app_controller.playback_controller,
@@ -42,7 +41,7 @@ class AppShell(QWidget):
             self,
         )
         root_splitter.addWidget(self.timeline_view)
-        
+
         # Give more space to the top area by default
         root_splitter.setStretchFactor(0, 4)
         root_splitter.setStretchFactor(1, 2)

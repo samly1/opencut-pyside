@@ -3,12 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QUrl
-from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-
 from app.domain.clips.audio_clip import AudioClip
 from app.domain.media_asset import MediaAsset
 from app.domain.project import Project
+from PySide6.QtCore import QObject, QUrl
+from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 
 
 @dataclass(slots=True)

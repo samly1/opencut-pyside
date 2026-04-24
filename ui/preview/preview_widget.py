@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+from app.controllers.playback_controller import PlaybackController
+from app.ui.preview.playback_toolbar import PlaybackToolbar
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
-
-from app.controllers.playback_controller import PlaybackController
-from app.ui.preview.playback_toolbar import PlaybackToolbar
 
 
 class PreviewWidget(QWidget):

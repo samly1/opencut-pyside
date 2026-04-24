@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QDoubleSpinBox, QFormLayout, QLineEdit, QSpinBox
-
 from app.domain.project import Project
 from app.ui.inspector._inspector_base import CommandAwareInspector, block_signals
+from PySide6.QtWidgets import QDoubleSpinBox, QFormLayout, QLineEdit, QSpinBox
 
 
 class ProjectInspector(CommandAwareInspector):

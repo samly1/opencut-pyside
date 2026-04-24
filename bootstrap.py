@@ -3,11 +3,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from PySide6.QtWidgets import QApplication
-
 from app.controllers.app_controller import AppController
 from app.ui.main_window import MainWindow
 from app.ui.shared.theme import apply_basic_theme
+from PySide6.QtWidgets import QApplication
 
 
 @dataclass(slots=True)
