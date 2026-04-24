@@ -19,6 +19,7 @@ Notes:
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -53,14 +54,59 @@ if bin_dir.is_dir():
         if candidate.is_file():
             datas.append((str(candidate), "bin"))
 
-# Hidden imports: Qt multimedia plugins pulled in only via runtime lookup.
-hiddenimports = collect_submodules("PySide6.QtMultimedia")
+# The repo IS the importable ``app`` package, but the checkout directory
+# is usually named ``opencut-pyside`` (not ``app``), so
+# ``REPO_ROOT.parent`` doesn't contain a child called ``app`` that
+# PyInstaller's analysis can resolve. We work around this — just like
+# ``tests/conftest.py`` does for pytest — by materialising a staging
+# directory under ``packaging/build/`` whose only child is ``app`` linked
+# (or copied) to ``REPO_ROOT``. PyInstaller then sees ``app`` at the top
+# of ``pathex`` and can statically trace ``from app.bootstrap import …``.
+STAGING_DIR = SPEC_DIR.parent / "build" / "import_staging"
+APP_LINK = STAGING_DIR / "app"
+STAGING_DIR.mkdir(parents=True, exist_ok=True)
+if APP_LINK.is_symlink() or APP_LINK.exists():
+    if APP_LINK.is_symlink():
+        APP_LINK.unlink()
+    elif APP_LINK.is_dir():
+        shutil.rmtree(APP_LINK)
+try:
+    APP_LINK.symlink_to(REPO_ROOT, target_is_directory=True)
+except (OSError, NotImplementedError):
+    # Windows without Developer Mode cannot create symlinks — fall back to
+    # a filtered copy. We exclude heavy / irrelevant dirs to keep the copy
+    # fast and the bundle minimal.
+    shutil.copytree(
+        REPO_ROOT,
+        APP_LINK,
+        ignore=shutil.ignore_patterns(
+            ".git",
+            ".github",
+            "__pycache__",
+            "*.pyc",
+            "packaging",
+            "tests",
+            "exports",
+            ".venv",
+            "venv",
+            ".pytest_cache",
+            ".ruff_cache",
+        ),
+    )
+
+# Hidden imports: Qt multimedia plugins pulled in only via runtime lookup,
+# plus every submodule under our own ``app`` package so PyInstaller bundles
+# lazy / dynamic imports (e.g. controllers resolved via the DI container).
+hiddenimports = (
+    collect_submodules("PySide6.QtMultimedia")
+    + collect_submodules("app")
+)
 
 # PyInstaller analysis --------------------------------------------------
 
 a = Analysis(  # noqa: F821 - PyInstaller-provided
     [entry_script],
-    pathex=[str(REPO_ROOT.parent)],  # make 'import app.*' resolvable.
+    pathex=[str(STAGING_DIR)],  # contains an 'app' child mapped to REPO_ROOT.
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
