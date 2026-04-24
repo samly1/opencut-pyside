@@ -1,1 +1,0 @@
-# opencut-pyside
