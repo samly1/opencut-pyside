@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
-
 from app.controllers.project_controller import ProjectController
 from app.domain.media_asset import MediaAsset
 from app.ui.media_panel.media_item_widget import MediaListWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
 
 class MediaPanel(QWidget):

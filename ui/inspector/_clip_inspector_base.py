@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QFormLayout, QLineEdit
-
 from app.domain.clips.base_clip import BaseClip
 from app.ui.inspector._inspector_base import CommandAwareInspector, block_signals
+from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QFormLayout, QLineEdit
 
 
 class ClipInspectorBase(CommandAwareInspector):

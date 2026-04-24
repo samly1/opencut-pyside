@@ -2,13 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
-from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QToolBar
-
 from app.controllers.app_controller import AppController
 from app.ui.app_shell import AppShell
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QToolBar
 
 
 class MainWindow(QMainWindow):

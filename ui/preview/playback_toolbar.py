@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+from app.controllers.playback_controller import PlaybackController
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
-
-from app.controllers.playback_controller import PlaybackController
 
 
 class PlaybackToolbar(QWidget):

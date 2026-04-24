@@ -3,12 +3,11 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
 
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
-
 from app.controllers.project_controller import ProjectController
 from app.domain.project import Project
 from app.dto.export_dto import ExportResult
 from app.services.export_service import ExportService
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
 
 
 @dataclass(slots=True)

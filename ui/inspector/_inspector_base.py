@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator
-
-from PySide6.QtWidgets import QWidget
+from typing import Any
 
 from app.domain.commands import UpdatePropertyCommand
+from PySide6.QtWidgets import QWidget
 
 
 @contextmanager
@@ -14,7 +14,7 @@ def block_signals(*widgets: object) -> Iterator[None]:
     try:
         yield
     finally:
-        for widget, previous_state in zip(widgets, previous_states):
+        for widget, previous_state in zip(widgets, previous_states, strict=True):
             widget.blockSignals(previous_state)
 
 

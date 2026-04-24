@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QBrush, QPen, QPainter
-from PySide6.QtWidgets import QGraphicsScene
-
 from app.domain.clips.audio_clip import AudioClip
 from app.domain.clips.base_clip import BaseClip
 from app.domain.clips.image_clip import ImageClip
@@ -14,6 +10,9 @@ from app.domain.track import Track
 from app.ui.timeline.clip_item import ClipItem
 from app.ui.timeline.playhead_item import PlayheadItem
 from app.ui.timeline.ruler_widget import format_seconds_label
+from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtGui import QBrush, QColor, QPainter, QPen
+from PySide6.QtWidgets import QGraphicsLineItem, QGraphicsScene
 
 
 class TimelineScene(QGraphicsScene):
@@ -114,7 +113,7 @@ class TimelineScene(QGraphicsScene):
         ruler_rect = QRectF(0.0, 0.0, self.sceneRect().width(), self.ruler_height)
         border_pen = QPen(QColor("#8693a0"), 1)
         border_pen.setCosmetic(True)
-        
+
         ruler_item = self.addRect(
             ruler_rect,
             border_pen,
@@ -130,7 +129,7 @@ class TimelineScene(QGraphicsScene):
         # Add a small epsilon to duration to ensure the last tick is drawn
         while current_tick <= duration_seconds + 1e-6:
             x = self.left_gutter + current_tick * self.pixels_per_second
-            
+
             is_label_tick = False
             # Check if current_tick is a multiple of label_interval
             if label_interval > 0:
@@ -145,14 +144,14 @@ class TimelineScene(QGraphicsScene):
             if is_label_tick:
                 label_text = format_seconds_label(current_tick)
                 self._ruler_label_specs.append((x + 4, label_text))
-            
+
             current_tick += tick_interval
 
     def _get_ruler_intervals(self, pps: float) -> tuple[float, float]:
         """Returns (label_interval, tick_interval) in seconds."""
         # target_label_dist = 100 pixels
         possible_intervals = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0, 120.0, 300.0, 600.0, 1800.0, 3600.0]
-        
+
         target_dist = 100.0
         label_interval = 1.0
         for interval in possible_intervals:
@@ -161,13 +160,13 @@ class TimelineScene(QGraphicsScene):
                 break
         else:
             label_interval = possible_intervals[-1]
-            
+
         # Tick interval is usually 1/5 or 1/2 of label interval
         if label_interval <= 0.5:
             tick_interval = label_interval / 2
         else:
             tick_interval = label_interval / 5
-            
+
         return label_interval, tick_interval
 
     def _draw_tracks(self, tracks: list[Track]) -> None:
@@ -257,7 +256,7 @@ class TimelineScene(QGraphicsScene):
 
     def show_snap_guide(self, scene_x: float) -> None:
         self.hide_snap_guide()
-        
+
         pen = QPen(QColor("#ff4d4d"), 1, Qt.PenStyle.DashLine)
         scene_height = self.sceneRect().height()
         self._snap_guide_item = self.addLine(

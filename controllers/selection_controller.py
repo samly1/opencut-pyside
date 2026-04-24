@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QObject, Signal
-
 from app.domain.selection import SelectionState
+from PySide6.QtCore import QObject, Signal
 
 
 class SelectionController(QObject):

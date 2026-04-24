@@ -1,8 +1,22 @@
 from __future__ import annotations
 
+import logging
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+
+def _bundled_ffmpeg_candidates(bin_dir: Path) -> list[Path]:
+    """Return possible bundled ffmpeg binaries for the current platform."""
+
+    if sys.platform.startswith("win"):
+        names = ["ffmpeg.exe"]
+    else:
+        names = ["ffmpeg"]
+    return [bin_dir / name for name in names]
 
 
 class FFmpegGateway:
@@ -72,28 +86,35 @@ class FFmpegGateway:
                 timeout=self._timeout_seconds,
             )
         except OSError as exc:
-            print("FFMPEG OS ERROR:", exc)
+            logger.warning("ffmpeg OS error: %s", exc)
             return None
         except subprocess.SubprocessError as exc:
-            print("FFMPEG SUBPROCESS ERROR:", exc)
+            logger.warning("ffmpeg subprocess error: %s", exc)
             return None
 
         if result.returncode != 0:
             stderr_text = result.stderr.decode("utf-8", errors="ignore").strip()
-            print("FFMPEG FAILED:")
-            print("COMMAND:", " ".join(command))
-            print("STDERR:", stderr_text)
+            logger.debug("ffmpeg failed (returncode=%s) cmd=%s stderr=%s", result.returncode, " ".join(command), stderr_text)
             return None
 
         if not result.stdout:
-            print("FFMPEG EMPTY OUTPUT")
+            logger.debug("ffmpeg produced no output for cmd=%s", " ".join(command))
             return None
 
         return bytes(result.stdout)
 
     @staticmethod
     def _resolve_ffmpeg_executable(explicit_executable: str | None) -> str:
-        bundled_executable = Path(__file__).resolve().parents[1] / "bin" / "ffmpeg.exe"
+        """Resolve the ffmpeg executable across Windows/macOS/Linux.
+
+        Preference order:
+            1. Explicit path passed in (if it exists).
+            2. Explicit name resolvable via ``shutil.which``.
+            3. Platform-appropriate bundled binary in ``<repo>/bin``.
+            4. System ``ffmpeg`` / ``ffmpeg.exe`` on ``PATH``.
+            5. Fallback string ``"ffmpeg"`` so callers can still fail gracefully.
+        """
+
         if explicit_executable:
             explicit_path = Path(explicit_executable).expanduser()
             if explicit_path.exists():
@@ -105,11 +126,14 @@ class FFmpegGateway:
 
             return explicit_executable
 
-        if bundled_executable.exists():
-            return str(bundled_executable)
+        bin_dir = Path(__file__).resolve().parents[1] / "bin"
+        for candidate in _bundled_ffmpeg_candidates(bin_dir):
+            if candidate.exists():
+                return str(candidate)
 
-        system_executable = shutil.which("ffmpeg")
-        if system_executable is not None:
-            return system_executable
+        for name in ("ffmpeg", "ffmpeg.exe"):
+            system_executable = shutil.which(name)
+            if system_executable is not None:
+                return system_executable
 
         return "ffmpeg"

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLineEdit
-
 from app.domain.clips.text_clip import TextClip
 from app.ui.inspector._clip_inspector_base import ClipInspectorBase, block_signals
+from PySide6.QtWidgets import QLineEdit
 
 
 class TextInspector(ClipInspectorBase):
