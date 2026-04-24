@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QLocale, QTranslator
@@ -33,6 +34,16 @@ SUPPORTED_LANGUAGES = ("vi", "en")
 
 
 def _repo_root() -> Path:
+    # Inside a PyInstaller bundle the ``app`` package is packaged under
+    # ``<_MEIPASS>/app/`` (see packaging/opencut-pyside.spec) but bundled
+    # data files like ``i18n/*.qm`` are placed at ``<_MEIPASS>/i18n/``.
+    # Walking up from ``__file__`` would therefore land in the wrong
+    # place — use ``sys._MEIPASS`` in frozen builds so callers resolve
+    # the bundle root where the data lives.
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass)
     # translation_manager.py lives at <repo>/infrastructure/.
     return Path(__file__).resolve().parent.parent
 

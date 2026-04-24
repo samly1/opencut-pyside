@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from app.infrastructure import translation_manager as tm
 from PySide6.QtWidgets import QApplication
@@ -51,6 +53,23 @@ def test_unsupported_system_locale_falls_through_to_default(monkeypatch):
     monkeypatch.delenv("OPENCUT_LANG", raising=False)
     monkeypatch.setattr(tm, "QLocale", _FakeQLocale("de_DE"), raising=True)
     assert tm.resolve_language() == "vi"
+
+
+def test_repo_root_uses_meipass_when_frozen(monkeypatch, tmp_path):
+    # Simulate a PyInstaller bundle: sys.frozen=True, sys._MEIPASS set to
+    # the bundle root. _repo_root must return that instead of walking up
+    # from __file__ (which would land inside <_MEIPASS>/app/).
+    monkeypatch.setattr(tm.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(tm.sys, "_MEIPASS", str(tmp_path), raising=False)
+    assert tm._repo_root() == tmp_path
+
+
+def test_repo_root_uses_file_when_not_frozen(monkeypatch):
+    # Development run: sys.frozen is missing / False. Must walk up from
+    # translation_manager.py's location.
+    monkeypatch.setattr(tm.sys, "frozen", False, raising=False)
+    expected = Path(tm.__file__).resolve().parent.parent
+    assert tm._repo_root() == expected
 
 
 def test_install_translators_is_noop_when_no_qm(tmp_path, qapp, monkeypatch):
