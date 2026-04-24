@@ -1442,8 +1442,29 @@ class AdvancedTimelineWidget(QWidget):
                     self.update_widget_size()
                     self.update()
                     self.zoom_changed.emit(self.zoom)
-        else: 
+        else:
             event.ignore()
+            # Khi bật "dính Playhead vào chuột" (hover-scrub), sau khi thanh cuộn
+            # xử lý Alt + lăn chuột (cuộn ngang timeline) thì vị trí chuột trên
+            # timeline đã thay đổi nhưng không có mouseMoveEvent được phát.
+            # Lên lịch đồng bộ playhead với vị trí chuột sau khi việc cuộn kết thúc.
+            if getattr(self, 'hover_scrub_enabled', False):
+                QTimer.singleShot(0, self._sync_hover_scrub_to_cursor)
+
+    def _sync_hover_scrub_to_cursor(self):
+        """Cập nhật playhead về vị trí chuột hiện tại khi đang bật hover-scrub.
+
+        Dùng sau các thao tác làm timeline dịch chuyển dưới chuột mà không phát
+        mouseMoveEvent (ví dụ Alt + lăn chuột để cuộn ngang).
+        """
+        if not getattr(self, 'hover_scrub_enabled', False):
+            return
+        if self.is_scrubbing or self.dragging_sub or self.resizing_sub:
+            return
+        pos = self.mapFromGlobal(QCursor.pos())
+        if not self.rect().contains(pos):
+            return
+        self.handle_scrub(pos)
 
     def handle_scrub(self, pos):
         """Xử lý kéo thanh playhead, giới hạn trong vùng nhìn thấy"""
